@@ -55,6 +55,8 @@ exports.showAllCategories = async (req, res) => {
     }
 }
 
+
+//categoryPageDetails
 exports.categoryPageDetails = async (req, res) => {
     try {
         //get category id

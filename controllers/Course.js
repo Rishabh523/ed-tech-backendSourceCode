@@ -1,7 +1,7 @@
 const Course =require("../models/Course");
-const Tag = require("../models/Tags");
+const Category = require("../models/Category");
 const User = require("../models/User");
-const {uploadImageCloudinary, uploadImageToCloudinary} = require("../utils/imageUploader");
+const { uploadImageToCloudinary } = require("../utils/imageUploader");
 
 //createCourse handler function
 exports.createCourse = async (req, res) => {
@@ -87,7 +87,7 @@ exports.createCourse = async (req, res) => {
 
 //getAllCourse handler function
 
-exports.showAllCourses = async (req, res) => {
+exports.getAllCourses = async (req, res) => {
     try{
          const allCourses = await Course.find({}, {courseName:true,
                                                    price:true,
@@ -114,7 +114,7 @@ exports.showAllCourses = async (req, res) => {
 }
 
 
-//get all courseDetails
+//get  courseDetails
 exports.getCourseDetails = async (req, res) => {
   try{
       //get id
