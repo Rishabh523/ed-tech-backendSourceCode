@@ -241,12 +241,35 @@ exports.login = async (req,res) => {
 
 exports.changePassword = async (req,res) => {
     //get data from req body
-
+    const {id, oldPassword, newPassword, confirmNewPassword} = req.body;
     //get oldpassword, newPassword, confiirmnewPassword
+    const userDetails = await User.findById(id);
 
-    //validation
+    //validation of old password
+    const isPasswordMatch = await bcrypt.compare(oldPassword, userDetails.password);
+    if(!isPasswordMatch) {
+       return res.status(401).json({
+        success:false,
+        mesaage:"The password is incorrect",
+       })
+    }
+    //match new password and confirm new password
+    if(newPassword !== confirmNewPassword){
+        return res.status(400).json({
+            success:true,
+            mesaage:"The password and the confirm password does not match",
+        });
+    }
     //update password in db
+    const encryptPassword = await bcrypt.hash(newPassword, 10);
+    const updatedPassword= await findByIdAndUpdate(id, 
+                                                  {password: encryptPassword}, 
+                                                   {new:true});
+
     //send mail -password updated
+    try{
+        
+    }
     //return response
 
 }

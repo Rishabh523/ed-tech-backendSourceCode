@@ -1,8 +1,8 @@
-const Tag = require("../models/Tags");
+const Category = require("../models/Category");
 
 //create tag ka handle define krna h
 
-exports.create = async (req, res) => {
+exports.createCategory = async (req, res) => {
     try{
         //fetch data
         const {name, description} = req.body;
@@ -16,15 +16,15 @@ exports.create = async (req, res) => {
         }
 
         //create entry in DB
-        const tagDetails = await Tag.create({
+        const CategoryDetails = await Category.create({
             name:name,
             description:description,
         });
-        console.log(tagDetails);
+        console.log(CategoryDetails);
         //return response
         return res.status(200).json({
             success:true,
-            message:"Tag Created Successfully",
+            message:"Category Created Successfully",
         })
 
     } catch(error) {
@@ -35,15 +35,16 @@ exports.create = async (req, res) => {
     }
 }
 
-//getAllTags handler function
+//getAllCategories handler function
 
-exports.showAlltags = async (req, res) => {
+exports.showAllCategories = async (req, res) => {
     try{
-        const allTags = await Tag.find({}, {name:true, description:true});
+        const allCategories = await Category.find(
+            {}, 
+            {name:true, description:true});
         res.status(200).json({
             success:true,
-            message:"All tags returned successfully",
-            allTags,
+            data: allCategories,
         })
     
     } catch(error) {
