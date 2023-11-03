@@ -2,7 +2,7 @@ const Tag = require("../models/Tags");
 
 //create tag ka handle define krna h
 
-exports.createTag = async (req, res) => {
+exports.create = async (req, res) => {
     try{
         //fetch data
         const {name, description} = req.body;

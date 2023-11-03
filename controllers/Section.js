@@ -43,4 +43,58 @@ exports.createSection = async (req, res) => {
 }
 
 //update section
-exports.updateSection = a
+exports.updateSection = async (req, res) => {
+    try{
+       //data input
+       const {sectionName, sectionId} = req.body;
+       //data validation
+       if(!sectionId || !sectionName)
+       {
+         return res.status(400).json({
+            success:false,
+            message:"Missing Properties",
+         });
+       }
+       //update response
+       const section = await Section.findByIdAndUpdate(sectionId, {sectionName}, {new:true});
+      
+       //return res
+       return res.status(200).json({
+        success:true,
+        message:"Section Updated Successfully",
+       });
+
+    } catch(error) {
+        return res.status(500).json({
+            success:false, 
+            message:"Unable to update Section, please try again",
+            error:error.message,
+        });
+    }
+}
+
+
+exports.deleteSection = async (req, res) => {
+    try{
+      //get ID -assuming that we are sending id in params
+      const {sectionId} = req.params;
+      
+      //use findByIdAndDelete
+      await Section.findByIdAndDelete(sectionId);
+
+      //TODO: do we need to delete the entry from the course Schema
+      
+      
+      //return response
+      return res.status(200).json({
+        success:true,
+        messsge:"Section deleted Successfully",
+      });
+    } catch(error) {
+        return res.status(500).json({
+            success:false, 
+            message:"Unable to delete Section, please try again",
+            error:error.message,
+        });
+    }
+}
