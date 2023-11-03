@@ -13,13 +13,18 @@ const OTPSchema = new mongoose.Schema({
     createdAt:{
         type:Date,
         default:Date.now(),
-        expires: 5*60,
-    }
+        expires: 5*60,  // The document will be automatically deleted after 5 minutes of its creation time
+    },
 });
 
 // functin => send email
 
 async function sendVerificationEmail(email, otp){
+    // Create a transporter to send emails
+
+	// Define the email options
+
+	// Send the email
     try{
         const mailResponse = await mailSender(email,"Verification Email from StudyNotion", otp);
         console.log("Email Sent Successfully",mailresponse);
@@ -29,6 +34,7 @@ async function sendVerificationEmail(email, otp){
     }
 }
 
+// Define a pre-save hook to send email after the document has been saved
 OTPSchema.pre("save", async function(next) {
     await sendVerificationEmail(this.email, this.otp);
     next();
