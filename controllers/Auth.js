@@ -8,70 +8,14 @@ const { passwordUpdated } = require("../mail/templates/passwordUpdate");
 const Profile = require("../models/Profile");
 require("dotenv").config();
 
-//sendOTP
-exports.sendOTP = async (req,res) => {
-    try{
-        //fetch email from request ki body
-       const {email} =req.body;
 
-       // check if user already present
-       const checkUserPresent =await User.findOne({email});
-       
-       //if user already exist, then return a response
-       if(checkUserPresent){
-        return res.status(401).json({
-            success:false,
-            messge:"User already exist",
-        });
 
-       }
-
-       //generate otp
-       var otp = otpGenerator.generate(6,{
-        upperCaseAlphabets:false,
-        lowerCaseAlphabets:false,
-        specialChars:false,
-       });
-       console.log("OTP generated:", otp);
-
-       //check unique otp or not
-       const result = await OTP.findOne({otp: otp});
-      
-       while(result) {
-          otp = otpGenerator(6, {
-            upperCaseAlphabets:false,
-            lowerCaseAlphabets:false,
-            specialChars:false,
-          });
-          result = await OTP.findOne({otp: otp});
-       }
-
-       const otpPayload = {email, otp};
-       
-       //create an entry in db for OTP
-       const otpBody = await OTP.create(otpPayload);
-
-       //return response successfull
-       res.status(200).json({
-        success:true,
-        message:"OTP sent Successfully",
-        otp,
-       })
-
-    } catch(error) {
-        console.log(error);
-        return res.status(500).json({
-          success:false,
-          message:error.message,
-        })
-    }
-}
 
 
 
 
 //signup
-exports.signUp = async (req,res) => {
+exports.signup = async (req,res) => {
     try{
       //data fetch from req body
       const {
@@ -82,10 +26,15 @@ exports.signUp = async (req,res) => {
         confirmPassword,
         accountType,
         contactNumber,
-        otp } =req.body;
+        otp } = req.body;
 
       //data validation
-      if(!firstName  || !lastName || !email || !password || !confirmPassword || !otp)
+      if(!firstName  || 
+        !lastName || 
+        !email || 
+        !password || 
+        !confirmPassword || 
+        !otp)
       {
         return res.status(403).json({
             success:false,
@@ -97,12 +46,12 @@ exports.signUp = async (req,res) => {
       if(password !== confirmPassword){
         return res.status(400).json({
             success:false,
-            message:"Password and ConfirmPassword value does not match, please try again",
+            message:"Password and ConfirmPassword value do not match, please try again",
         });
       }
 
       //check user already exist or not
-      const existingUser = User.findOne({email});
+      const existingUser = await User.findOne({email});
        if(existingUser) {
         return res.status(400).json({
             success:false,
@@ -111,17 +60,17 @@ exports.signUp = async (req,res) => {
       }
 
       //find most recent OTP stored for the user
-      const recentOtp = await OTP.find({email}).sort({createdAt:-1}).limit(1);
-      console.log(recentOtp);
+      const response = await OTP.find({ email }).sort({ createdAt: -1}).limit(1);
+      console.log(response);
 
       //validate OTP
-      if(recentOtp.length == 0) {
+      if(response.length == 0) {
         return res.status(400).json({
             success:false,
             message:"OTP NOT found",
         })
       }
-      else if(otp !== recentOtp.otp) {
+      else if(otp !== response[0].otp) {
         //invalid otp
         return res.status(400).json({
             success:false,
@@ -168,12 +117,80 @@ exports.signUp = async (req,res) => {
   }
 }
 
+//sendOTP
+exports.sendotp = async (req,res) => {
+    try{
+        //fetch email from request ki body
+       const { email } = req.body;
+
+       // check if user already present
+       const checkUserPresent = await User.findOne({email});
+       
+       //if user already exist, then return a response
+       if(checkUserPresent) {
+        // Return 401 Unauthorized status code with error message
+        return res.status(401).json({
+            success:false,
+            messge:`User is Already Registered`,
+        });
+
+       }
+
+       //generate otp
+       var otp = otpGenerator.generate(6, {
+        upperCaseAlphabets:false,
+        lowerCaseAlphabets:false,
+        specialChars:false,
+       });
+       console.log("OTP generated:", otp);
+
+       //check unique otp or not
+       const result = await OTP.findOne({otp: otp});
+       console.log("Result is Generate OTP Func");
+	   console.log("OTP", otp);
+	   console.log("Result", result);
+
+       while(result) {
+          otp = otpGenerator(6, {
+            upperCaseAlphabets:false,
+            lowerCaseAlphabets:false,
+            specialChars:false,
+          });
+          result = await OTP.findOne({otp: otp});
+       }
+
+       const otpPayload = {email, otp};
+       
+       //create an entry in db for OTP
+       const otpBody = await OTP.create(otpPayload);
+
+       //return response successfull
+       res.status(200).json({
+        success:true,
+        message:"OTP sent Successfully",
+        otp,
+       })
+
+    } catch(error) {
+        console.log(error);
+        return res.status(500).json({
+          success:false,
+          message:error.message,
+        })
+    }
+}
+
+
+
+
+
+
 
 //login
 exports.login = async (req,res) => {
     try{
         //get data from request body
-        const {email, password} = req.body;
+        const { email, password } = req.body;
 
         //validation of data
         if(!email || !password){
@@ -194,17 +211,23 @@ exports.login = async (req,res) => {
         }
 
         //generate jwt after password matching
-        if(await bcrypt.compare(user.password, password)){
-           const payload = {
-            email:user.email,
-            id: user._id,
-            accountType:user.accountType,
-           }
+        if(await bcrypt.compare(password, user.password)){
+            const token = jwt.sign(
+                {
+                    email:user.email,
+                    id: user._id,
+                    accountType:user.accountType,
+                   }, 
+                   process.env.JWT_SECRET,
+                   {
+                     expiresIn:"24h",
+                  }
+           );
            
-            const token = jwt.sign(payload, process.env.JWT_SECRET,{
-                expireIn:"2h",
-           });
+           
+            
            //problem
+           
            user.token = token;
            user.password = undefined;
 
@@ -223,16 +246,16 @@ exports.login = async (req,res) => {
         })
     }  
     else{
-        return res.staus(401).json({
+        return res.status(401).json({
             success:false,
             message:"Password do not match",
-        })
+        });
     }
 
     } catch(error) {
 
-        console.log(error);
-        return res.staus(500).json({
+        console.error(error);
+        return res.status(500).json({
             success:false,
             message:"Login failure please try again",
         })

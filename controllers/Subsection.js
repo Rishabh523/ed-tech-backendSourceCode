@@ -3,7 +3,7 @@ const Section = require("../models/Section");
 const { uploadImageToCloudinary } = require("../utils/imageUploader");
 
 //create SubSection
-exports.createSubsection = async (req, res) => {
+exports.createSubSection = async (req, res) => {
     try{
        //fetch data from request body
        const {sectionId, title, timeDuration, description} = req.body;

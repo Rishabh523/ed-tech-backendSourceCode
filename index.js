@@ -15,7 +15,7 @@ const fileUpload = require("express-fileupload");
 const dotenv = require("dotenv");
 
 dotenv.config();
-const PORT = process.env.PORT || 4000;
+const PORT = process.env.PORT || 5000;
 
 //database connect
 database.connect();
@@ -49,14 +49,14 @@ app.use("/api/v1/payment", paymentRoutes);
 
 //default route
 app.get("/", (req, res)  => {
-    return res.status({
+    return res.json({
         success:true,
-        message:"Your server is up and running...",
+        message:`Your server is up and running...`,
     })
     
 });
  
 app.listen(PORT, () => {
   console.log(`App is running at ${PORT}`);  
-
+  
 })

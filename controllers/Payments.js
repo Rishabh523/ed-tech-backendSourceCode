@@ -2,7 +2,7 @@ const mongoose = require("mongoose");
 const {instance} = require("../confIg/razorpay");
 const Course = require("../models/Course");
 const User = require("../models/User");
-const mailSender = require("../utiils/mailSender");
+const mailSender = require("../utils/mailSender");
 const {courseEnrollmentEmauil} = require("../mail/templates/courseEnrollmentEmail");
 
 //capture the payment and initiate the razorpay order
