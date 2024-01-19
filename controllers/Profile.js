@@ -11,12 +11,12 @@ exports.updateProfile = async (req, res) => {
         const id = req.user.id;
 
         //validation
-        if(!contactNumber || !gender || !id){
-            return resizeBy.status(400).json({
-                success:false,
-                message:"All fields are required",
-            });
-        }
+        // if(!contactNumber || !gender || !id){
+        //     return res.status(400).json({
+        //         success:false,
+        //         message:"All fields are required",
+        //     });
+        // }
         //find profile
         const userDetails = await User.findById(id);
         const profileId = userDetails.additionalDetails;
@@ -63,7 +63,7 @@ exports.deleteAccount = async (req, res) => {
 
 
         //delete user
-        await User.fimdByIdAndDelete({_id:id});
+        await User.findByIdAndDelete({_id:id});
 
        
         //return response
@@ -92,18 +92,21 @@ exports.getAllUserDetails = async (req, res) => {
         //validation
       
         //get user details using db call
-        const userDetails = await User.findById(id).populate("additionalDetails").exec();
+        const userDetails = await User.findById(id)
+                          .populate("additionalDetails")
+                          .exec();
         //return response
+        console.log(userDetails);
         return res.status(200).json({
             succesS:true,
             message:"User Data fetched Successfully",
+            data: userDetails,
         })
     } catch(error) {
         return res.status(500).json({
             success:false,
             error:error.message,
         });
-
     }
 }
 

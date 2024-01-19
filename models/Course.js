@@ -3,8 +3,6 @@ const mongoose = require("mongoose");
 const courseSchema = new mongoose.Schema({
     courseName: {
         type:String,
-        required:true,
-        trim:true,
     },
     courseDescription:{
         type:String,
@@ -31,14 +29,14 @@ const courseSchema = new mongoose.Schema({
         }
     ],
     price:{
-        type:String,
+        type:Number,
     },
     thumbnail:{
         type:String,
     },
     tag:{
-        type:mongoose.Schema.Types.ObjectId,
-        ref:"Tag",
+        type: [String],
+        required: true,
     },
     category: {
         type:mongoose.Schema.Types.ObjectId,

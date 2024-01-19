@@ -13,7 +13,7 @@ exports.resetPasswordToken = async (req, res) => {
         if(!user){
             return res.json({
                 success:false,
-                message:"User is not found",
+                message:`This Email: ${email} is not Registered With Us Enter a Valid Email `,
             })
         }
         //generate token
@@ -32,9 +32,10 @@ exports.resetPasswordToken = async (req, res) => {
         //send mail containing an url
         await mailSender(email, 
                         "Password Reset Link",
-                        `Password reset link: ${url}`);
+                        `Your Link for email verification is ${url}. Please click this url to reset your password.`
+                        );
         //return response
-        return res.json({
+        res.json({
             success:true,
             message:"Email sent successfully, please check email and change password",
         });
@@ -45,10 +46,10 @@ exports.resetPasswordToken = async (req, res) => {
         console.log(error);
     return res.status(500).json({
         success:false,
-        message:"Something went wrong while sending reset password mail",
+        message:`Some Error in Sending the Reset Message`,
     });
     }
-}
+};
 
 
 //reset Password

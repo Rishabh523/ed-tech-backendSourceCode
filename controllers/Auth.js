@@ -26,7 +26,8 @@ exports.signup = async (req,res) => {
         confirmPassword,
         accountType,
         contactNumber,
-        otp } = req.body;
+        otp,
+     } = req.body;
 
       //data validation
       if(!firstName  || 
@@ -55,7 +56,7 @@ exports.signup = async (req,res) => {
        if(existingUser) {
         return res.status(400).json({
             success:false,
-            message:"User is already registered",
+            message:"User is already exists. Please sign in to continue",
         });
       }
 
@@ -67,7 +68,7 @@ exports.signup = async (req,res) => {
       if(response.length == 0) {
         return res.status(400).json({
             success:false,
-            message:"OTP NOT found",
+            message:"OTP is not found",
         })
       }
       else if(otp !== response[0].otp) {
@@ -83,7 +84,10 @@ exports.signup = async (req,res) => {
       
 
       //create entry in db 
-
+      let approved = "";
+		approved === "Instructor" ? (approved = false) : (approved = true);
+      
+        // create the additional profile for user
        const profileDetails = await Profile.create({
         gender:null,
         dateOfBirth:null,
@@ -97,93 +101,27 @@ exports.signup = async (req,res) => {
         email,
         contactNumber,
         password:hashedPassword,
-        accountType,
-        additionalDetails: profileDetails,
+        accountType: accountType,
+        approved : approved,
+        additionalDetails: profileDetails._id,
         image:`https://api.dicebear.com/5.x/initials/svg?seed=${firstName} ${lastName}`,
-      })
+      });
 
       //return res
       return res.status(200).json({
         success:true,
-        messgae:"User is registered successfully",
         user,
-    })
+        messgae:"User is registered successfully",
+        
+    });
   } catch(error) {
-    console.log(error)
+    console.error(error)
     return res.status(500).json({
         success:false,
         message:"User cannot registered please try again",
     })
   }
 }
-
-//sendOTP
-exports.sendotp = async (req,res) => {
-    try{
-        //fetch email from request ki body
-       const { email } = req.body;
-
-       // check if user already present
-       const checkUserPresent = await User.findOne({email});
-       
-       //if user already exist, then return a response
-       if(checkUserPresent) {
-        // Return 401 Unauthorized status code with error message
-        return res.status(401).json({
-            success:false,
-            messge:`User is Already Registered`,
-        });
-
-       }
-
-       //generate otp
-       var otp = otpGenerator.generate(6, {
-        upperCaseAlphabets:false,
-        lowerCaseAlphabets:false,
-        specialChars:false,
-       });
-       console.log("OTP generated:", otp);
-
-       //check unique otp or not
-       const result = await OTP.findOne({otp: otp});
-       console.log("Result is Generate OTP Func");
-	   console.log("OTP", otp);
-	   console.log("Result", result);
-
-       while(result) {
-          otp = otpGenerator(6, {
-            upperCaseAlphabets:false,
-            lowerCaseAlphabets:false,
-            specialChars:false,
-          });
-          result = await OTP.findOne({otp: otp});
-       }
-
-       const otpPayload = {email, otp};
-       
-       //create an entry in db for OTP
-       const otpBody = await OTP.create(otpPayload);
-
-       //return response successfull
-       res.status(200).json({
-        success:true,
-        message:"OTP sent Successfully",
-        otp,
-       })
-
-    } catch(error) {
-        console.log(error);
-        return res.status(500).json({
-          success:false,
-          message:error.message,
-        })
-    }
-}
-
-
-
-
-
 
 
 //login
@@ -194,7 +132,7 @@ exports.login = async (req,res) => {
 
         //validation of data
         if(!email || !password){
-            return res.status(403).json({
+            return res.status(400).json({
                 success:false,
                 message:"All fields are required, please try again",
             });
@@ -239,7 +177,7 @@ exports.login = async (req,res) => {
             httpOnly:true,
         }
         res.cookie("token", token, options).status(200).json({
-            succes:true,
+            success:true,
             token,
             user,
             message:"Logged in successfully",
@@ -258,9 +196,79 @@ exports.login = async (req,res) => {
         return res.status(500).json({
             success:false,
             message:"Login failure please try again",
+        });
+    }
+};
+
+//sendOTP
+exports.sendotp = async (req,res) => {
+    try{
+        //fetch email from request ki body
+       const { email } = req.body;
+
+       // check if user already present
+       const checkUserPresent = await User.findOne({ email });
+       
+       //if user already exist, then return a response
+       if(checkUserPresent) {
+        // Return 401 Unauthorized status code with error message
+        return res.status(401).json({
+            success:false,
+            messge:`User is Already Registered`,
+        });
+
+       }
+
+       //generate otp
+       var otp = otpGenerator.generate(6, {
+        upperCaseAlphabets:false,
+        lowerCaseAlphabets:false,
+        specialChars:false,
+       });
+       console.log("OTP generated:", otp);
+
+       //check unique otp or not
+       const result = await OTP.findOne({otp: otp});
+       console.log("Result is Generate OTP Func");
+	   console.log("OTP", otp);
+	   console.log("Result", result);
+
+       while(result) {
+          otp = otpGenerator(6, {
+            upperCaseAlphabets:false,
+            
+          });
+        //   result = await OTP.findOne({otp: otp});
+       }
+
+       const otpPayload = {email, otp};
+       
+       //create an entry in db for OTP
+       const otpBody = await OTP.create(otpPayload);
+
+       //return response successfull
+       res.status(200).json({
+        success:true,
+        message:"OTP sent Successfully",
+        otp,
+       })
+
+    } catch(error) {
+        console.log(error.message);
+        return res.status(500).json({
+          success:false,
+          error:error.message,
         })
     }
 }
+
+
+
+
+
+
+
+
 
 
 //changePASSWORD
@@ -270,10 +278,13 @@ exports.changePassword = async (req,res) => {
     //get data from req body
     const {id, oldPassword, newPassword, confirmNewPassword} = req.body;
     //get oldpassword, newPassword, confiirmnewPassword
-    const userDetails = await User.findById(id);
+    const userDetails = await User.findById(req.user.id);
 
     //validation of old password
-    const isPasswordMatch = await bcrypt.compare(oldPassword, userDetails.password);
+    const isPasswordMatch = await bcrypt.compare(
+        oldPassword, 
+        userDetails.password
+        );
     if(!isPasswordMatch) {
        return res.status(401).json({
         success:false,
@@ -283,15 +294,17 @@ exports.changePassword = async (req,res) => {
     //match new password and confirm new password
     if(newPassword !== confirmNewPassword){
         return res.status(400).json({
-            success:true,
+            success:false,
             mesaage:"The password and the confirm password does not match",
         });
     }
     //update password in db
-    const encryptPassword = await bcrypt.hash(newPassword, 10);
-    const updatedPassword= await findByIdAndUpdate(id, 
-                                                  {password: encryptPassword}, 
-                                                   {new:true});
+    const encryptedPassword = await bcrypt.hash(newPassword, 10);
+    const updatedPassword= await findByIdAndUpdate(
+        req.user.id, 
+        { password: encryptedPassword }, 
+        { new:true }
+        );
 
     //send mail -password updated
     try{
